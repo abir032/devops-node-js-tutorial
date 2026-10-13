@@ -1,6 +1,6 @@
 # React Tutorials Client
 
-A React UI for the [nodejs-express-mysql](../nodejs-express-mysql) tutorials REST API. You can list, search, create, edit, publish, delete and delete-all tutorials.
+A React UI for the [backend](https://github.com/abir032/devops-tutorials-client-app-backend) tutorials REST API. You can list, search, create, edit, publish, delete and delete-all tutorials.
 
 ## Setup
 

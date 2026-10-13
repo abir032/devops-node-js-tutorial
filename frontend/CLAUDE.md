@@ -4,7 +4,7 @@ This file guides Claude Code (claude.ai/code) when working in this repository.
 
 ## Project
 
-A React UI for the tutorials REST API in the separate backend repo `../nodejs-express-mysql` (Express + MySQL). It is built with React 19, Vite and React Router 7, and has no other runtime dependencies.
+A React UI for the tutorials REST API in the separate backend repo [devops-tutorials-client-app-backend](https://github.com/abir032/devops-tutorials-client-app-backend) (Express + MySQL), checked out locally at `../nodejs-express-mysql`. It is built with React 19, Vite and React Router 7, and has no other runtime dependencies.
 
 ## Commands
 
