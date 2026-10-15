@@ -21,7 +21,7 @@ Tutorial.create = (newTutorial, result) => {
 };
 
 Tutorial.findById = (id, result) => {
-  sql.query(`SELECT * FROM tutorials WHERE id = ${id}`, (err, res) => {
+  sql.reader.query(`SELECT * FROM tutorials WHERE id = ${id}`, (err, res) => {
     if (err) {
       console.log("error: ", err);
       result(err, null);
@@ -46,7 +46,7 @@ Tutorial.getAll = (title, result) => {
     query += ` WHERE title LIKE '%${title}%'`;
   }
 
-  sql.query(query, (err, res) => {
+  sql.reader.query(query, (err, res) => {
     if (err) {
       console.log("error: ", err);
       result(null, err);
@@ -59,7 +59,7 @@ Tutorial.getAll = (title, result) => {
 };
 
 Tutorial.getAllPublished = result => {
-  sql.query("SELECT * FROM tutorials WHERE published=true", (err, res) => {
+  sql.reader.query("SELECT * FROM tutorials WHERE published=true", (err, res) => {
     if (err) {
       console.log("error: ", err);
       result(null, err);
