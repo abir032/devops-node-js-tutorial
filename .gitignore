@@ -1,0 +1,13 @@
+# Terraform working files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+
+# Your own values (IP address, passwords)
+*.tfvars
+
+# Keys
+*.pem
+*.key
