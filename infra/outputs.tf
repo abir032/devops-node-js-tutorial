@@ -11,3 +11,6 @@ output "private_subnets_ids" {
 
 }
 
+output "backup_bucket" {
+  value = aws_s3_bucket.backups.bucket
+}
