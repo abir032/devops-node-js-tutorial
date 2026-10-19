@@ -14,3 +14,7 @@ output "private_subnets_ids" {
 output "backup_bucket" {
   value = aws_s3_bucket.backups.bucket
 }
+
+output "db_endpoint" {
+  value = aws_db_instance.main.address
+}
