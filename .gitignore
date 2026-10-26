@@ -3,11 +3,20 @@
 *.tfstate
 *.tfstate.*
 crash.log
+crash.*.log
 *.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
 # Your own values (IP address, passwords)
 *.tfvars
+*.tfvars.json
 
 # Keys
 *.pem
 *.key
+
+# macOS
+.DS_Store
