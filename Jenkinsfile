@@ -11,25 +11,10 @@ pipeline {
         FRONTEND_IMAGE = 'node-tutorial-frontend'
     }
 
-
     stages {
         stage('Repo info') {
             steps {
-                sh 'git log --oneline -3'
-                sh 'ls -la'
-            }
-        }
-
-        stage('Check project') {
-            steps {
-                sh 'ls backend frontend'
-                sh 'test -f backend/Dockerfile && test -f frontend/Dockerfile && echo "Both Dockerfiles found"'
-            }
-        }
-
-        stage('Where am I?') {
-            steps {
-                sh 'echo "user: $(whoami)"; echo "workspace: $WORKSPACE"; echo "build: $BUILD_NUMBER"'
+                sh 'git log --oneline -1'
             }
         }
 
@@ -56,9 +41,8 @@ pipeline {
                 '''
             }
         }
-    }
-    
-     stage('Build images') {
+
+        stage('Build images') {
             steps {
                 sh '''
                     GIT_SHORT=$(git rev-parse --short HEAD)
@@ -81,11 +65,13 @@ pipeline {
                 '''
             }
         }
-      stage('Show images') {
+
+        stage('Show images') {
             steps {
                 sh 'docker images --format "table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}" | grep -E "REPOSITORY|node-tutorial"'
             }
         }
+    }
 
     post {
         success {
