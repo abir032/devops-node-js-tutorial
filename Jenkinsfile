@@ -9,6 +9,7 @@ pipeline {
     environment {
         BACKEND_IMAGE  = 'node-tutorial-backend'
         FRONTEND_IMAGE = 'node-tutorial-frontend'
+        COMPOSE_FILE   = 'deploy/docker-compose.yml'
     }
 
     stages {
@@ -66,9 +67,19 @@ pipeline {
             }
         }
 
-        stage('Show images') {
+        stage('Deploy') {
             steps {
-                sh 'docker images --format "table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}" | grep -E "REPOSITORY|node-tutorial"'
+                withCredentials([
+                    string(credentialsId: 'node-db-root-password', variable: 'DB_ROOT_PASSWORD'),
+                    string(credentialsId: 'node-db-app-password',  variable: 'DB_PASSWORD')
+                ]) {
+                    sh '''
+                        export IMAGE_TAG=$BUILD_NUMBER
+                        docker compose -f $COMPOSE_FILE config --quiet
+                        docker compose -f $COMPOSE_FILE up -d --wait --wait-timeout 180
+                        docker compose -f $COMPOSE_FILE ps
+                    '''
+                }
             }
         }
     }

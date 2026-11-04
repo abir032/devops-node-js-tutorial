@@ -1,0 +1,54 @@
+name: node-tutorial
+
+services:
+  db:
+    image: mariadb:11.8
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is not set}
+      MARIADB_DATABASE: testdb
+      MARIADB_USER: appuser
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ../backend/db/init:/docker-entrypoint-initdb.d:ro
+    networks: [db-net]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    image: node-tutorial-backend:${IMAGE_TAG:-latest}
+    environment:
+      DB_HOST: db
+      DB_USER: appuser
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set}
+      DB_NAME: testdb
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks: [web-net, db-net]
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  frontend:
+    image: node-tutorial-frontend:${IMAGE_TAG:-latest}
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks: [web-net]
+    init: true
+    restart: unless-stopped
+
+networks:
+  web-net: {}
+  db-net:
+    internal: true
+
+volumes:
+  db-data: {}
