@@ -50,7 +50,7 @@ pipeline {
                 '''
             }
         }
-         
+      }         
         post {
          success {
             archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true
