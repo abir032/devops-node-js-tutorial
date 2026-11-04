@@ -1,8 +1,33 @@
+// Deploy the images of this build to one environment.
+// envName: dev / staging / prod   apiPort, webPort: host ports for that environment
+def deployTo(String envName, String apiPort, String webPort) {
+    withCredentials([
+        string(credentialsId: 'node-db-root-password', variable: 'DB_ROOT_PASSWORD'),
+        string(credentialsId: 'node-db-app-password',  variable: 'DB_PASSWORD')
+    ]) {
+        withEnv(["APP_ENV=${envName}", "API_PORT=${apiPort}", "WEB_PORT=${webPort}"]) {
+            sh '''
+                export IMAGE_TAG=$BUILD_NUMBER
+                PROJECT=node-tutorial-$APP_ENV
+                echo "Deploying build #$BUILD_NUMBER to $APP_ENV (api :$API_PORT, web :$WEB_PORT)"
+                docker compose -p $PROJECT -f $COMPOSE_FILE config --quiet
+                docker compose -p $PROJECT -f $COMPOSE_FILE up -d --wait --wait-timeout 180
+                docker compose -p $PROJECT -f $COMPOSE_FILE ps
+            '''
+        }
+    }
+}
+
 pipeline {
     agent any
 
     triggers {
         pollSCM('H/2 * * * *')
+    }
+
+    parameters {
+        choice(name: 'DEPLOY_UNTIL', choices: ['prod', 'staging', 'dev'],
+               description: 'How far to promote this build (prod still needs approval)')
     }
 
     options {
@@ -81,19 +106,33 @@ pipeline {
         // =========================  CD  =========================
         stage('CD') {
             stages {
-                stage('Deploy') {
+                stage('Deploy DEV') {
                     steps {
-                        withCredentials([
-                            string(credentialsId: 'node-db-root-password', variable: 'DB_ROOT_PASSWORD'),
-                            string(credentialsId: 'node-db-app-password',  variable: 'DB_PASSWORD')
-                        ]) {
-                            sh '''
-                                export IMAGE_TAG=$BUILD_NUMBER
-                                docker compose -f $COMPOSE_FILE config --quiet
-                                docker compose -f $COMPOSE_FILE up -d --wait --wait-timeout 180
-                                docker compose -f $COMPOSE_FILE ps
-                            '''
+                        script { deployTo('dev', '8180', '8181') }
+                    }
+                }
+
+                stage('Deploy STAGING') {
+                    when { expression { params.DEPLOY_UNTIL != 'dev' } }
+                    steps {
+                        script { deployTo('staging', '8280', '8281') }
+                    }
+                }
+
+                stage('Approve PROD') {
+                    when { expression { params.DEPLOY_UNTIL == 'prod' } }
+                    steps {
+                        timeout(time: 30, unit: 'MINUTES') {
+                            input message: "Deploy build #${BUILD_NUMBER} to PROD?",
+                                  ok: 'Deploy to prod'
                         }
+                    }
+                }
+
+                stage('Deploy PROD') {
+                    when { expression { params.DEPLOY_UNTIL == 'prod' } }
+                    steps {
+                        script { deployTo('prod', '8380', '8381') }
                     }
                 }
             }
@@ -103,7 +142,10 @@ pipeline {
     post {
         success {
             archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true
-            echo "✅ Build #${BUILD_NUMBER} deployed"
+            echo "✅ Build #${BUILD_NUMBER} done (promoted until: ${params.DEPLOY_UNTIL})"
+        }
+        aborted {
+            echo "⏹ Build #${BUILD_NUMBER} stopped: prod approval was refused or timed out"
         }
         failure {
             echo "❌ Build #${BUILD_NUMBER} failed"
