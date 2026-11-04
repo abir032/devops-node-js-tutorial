@@ -13,3 +13,4 @@ Node.js + MariaDB tutorials app (React frontend, Express backend), deployed to A
 
 - [AWS + Terraform: summary](docs/aws-terraform-summary.md): what was built and why, with the campus analogy
 - [AWS + Terraform: full tutorial](docs/aws-terraform-tutorial.md): every step, every file, every command
+- [CI/CD test]
