@@ -6,6 +6,12 @@ pipeline {
         timestamps()
     }
 
+    environment {
+        BACKEND_IMAGE  = 'node-tutorial-backend'
+        FRONTEND_IMAGE = 'node-tutorial-frontend'
+    }
+
+
     stages {
         stage('Repo info') {
             steps {
@@ -51,10 +57,42 @@ pipeline {
             }
         }
     }
+    
+     stage('Build images') {
+            steps {
+                sh '''
+                    GIT_SHORT=$(git rev-parse --short HEAD)
+
+                    docker build \
+                      -t $BACKEND_IMAGE:$BUILD_NUMBER \
+                      -t $BACKEND_IMAGE:$GIT_SHORT \
+                      -t $BACKEND_IMAGE:latest \
+                      --label git.commit=$GIT_SHORT \
+                      --label jenkins.build=$BUILD_NUMBER \
+                      backend
+
+                    docker build \
+                      -t $FRONTEND_IMAGE:$BUILD_NUMBER \
+                      -t $FRONTEND_IMAGE:$GIT_SHORT \
+                      -t $FRONTEND_IMAGE:latest \
+                      --label git.commit=$GIT_SHORT \
+                      --label jenkins.build=$BUILD_NUMBER \
+                      frontend
+                '''
+            }
+        }
+      stage('Show images') {
+            steps {
+                sh 'docker images --format "table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}" | grep -E "REPOSITORY|node-tutorial"'
+            }
+        }
 
     post {
         success {
             archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true
+        }
+        always {
+            sh 'docker image prune -f'
         }
     }
 }
